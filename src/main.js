@@ -1,3 +1,6 @@
+import * as Protobuf from 'pbf';
+import { VectorTile } from '@mapbox/vector-tile';
+
 // Get a WebGL context
 const canvas = document.getElementById('canvas');
 const gl = canvas.getContext('webgl');
@@ -27,7 +30,15 @@ async function init() {
         await fetch(tileURL)
             .then(rawData => rawData.arrayBuffer())
             .then(response => {
-                console.log(response);
+                // Decode the MVT
+                const tile = new VectorTile(new Protobuf(response));
+                const layer = tile.layers.layer0;
+                for (let i = 0; i < layer.length; i++) {
+                    const feature = layer.feature(i);
+                    const geom = feature.loadGeometry();
+                    const point = geom[0][0];
+                    console.log(point);
+                }
             });
     }
     getVectorData();

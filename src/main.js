@@ -27,6 +27,7 @@ async function init() {
 
         // Get the 0/0/0 MVT
         const tileURL = layergroup.metadata.tilejson.vector.tiles[0].replace('{x}', 0).replace('{y}', 0).replace('{z}', 0);
+        let geometry = [];
         await fetch(tileURL)
             .then(rawData => rawData.arrayBuffer())
             .then(response => {
@@ -37,11 +38,12 @@ async function init() {
                     const feature = layer.feature(i);
                     const geom = feature.loadGeometry();
                     const point = geom[0][0];
-                    console.log(point);
+                    // The MVT extent is 4096, and the Y coordinate is inverted respect the WebGL one
+                    geometry.push(2 * point.x / 4096 - 1, -2 * point.y / 4096 + 1);
                 }
             });
+        return { geometry };
     }
-    getVectorData();
 
     // Compile our shader
     function createProgram(vertexShaderGLSL, fragmentShaderGLSL) {
@@ -76,7 +78,7 @@ async function init() {
         // Z value fixed since we don't care about the visibility problem, see https://en.wikipedia.org/wiki/Z-buffering
         // W value fixed since we don't use 3D perspective, see https://www.tomdalling.com/blog/modern-opengl/explaining-homogenous-coordinates-and-projective-geometry/
         gl_Position = vec4(vertexPosition, 0.5, 1.);
-        gl_PointSize = 10.;
+        gl_PointSize = 2.;
     }
     `,
 
@@ -91,11 +93,7 @@ async function init() {
     );
 
     // Upload vector data to WebGL
-    let geometry = [
-        0, 0,
-        0.45, 0.9,
-        0.9, 0
-    ];
+    let { geometry } = await getVectorData();
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry), gl.STATIC_DRAW);

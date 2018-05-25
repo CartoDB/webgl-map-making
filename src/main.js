@@ -25,7 +25,7 @@ async function init() {
         }
         return shader;
     }
-    createProgram(
+    const program = createProgram(
         `
     // Vertex Shader
     precision highp float;
@@ -50,10 +50,30 @@ async function init() {
     `
     );
 
+    // Upload vector data to WebGL
+    let geometry = [
+        0, 0,
+        0.45, 0.9,
+        0.9, 0
+    ];
+    const vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry), gl.STATIC_DRAW);
+
     function render() {
         // Clear the screen
-        gl.clearColor(0.2, 0.8, 0.2, 1);
+        gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // Use our geometry for rendering now
+        const vertexAttribute = gl.getAttribLocation(program, 'vertexPosition');
+        gl.enableVertexAttribArray(vertexAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
+        // Use our shader
+        gl.useProgram(program);
+        // Render!
+        gl.drawArrays(gl.TRIANGLES, 0, geometry.length / 2);
     }
     render();
 }

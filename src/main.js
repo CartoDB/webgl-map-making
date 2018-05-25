@@ -96,6 +96,10 @@ async function init() {
     
     void main(){
         gl_FragColor = vec4(1.,1., 1.-featureDataVar/50000000., 1.);
+        vec2 p = (2.*gl_PointCoord-vec2(1.));
+        if (length(p) >= 1.){
+            gl_FragColor.a = 0.;
+        }
     }
     `
     );
@@ -118,6 +122,10 @@ async function init() {
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // Enable transparency / alpha blending
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         // Use our geometry for rendering now
         const vertexAttribute = gl.getAttribLocation(program, 'vertexPosition');

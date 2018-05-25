@@ -3,6 +3,35 @@ const canvas = document.getElementById('canvas');
 const gl = canvas.getContext('webgl');
 
 async function init() {
+    async function getVectorData() {
+        // Instantiate Map on Maps API
+        const mapConfig = {
+            layers: [
+                {
+                    type: 'mapnik',
+                    options: {
+                        sql: 'SELECT * FROM ne_10m_populated_places_simple',
+                    }
+                }
+            ]
+        };
+        const response = await fetch('https://dmanzanares.carto.com/api/v1/map?api_key=default_public', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mapConfig),
+        });
+        const layergroup = await response.json();
+
+        // Get the 0/0/0 MVT
+        const tileURL = layergroup.metadata.tilejson.vector.tiles[0].replace('{x}', 0).replace('{y}', 0).replace('{z}', 0);
+        await fetch(tileURL)
+            .then(rawData => rawData.arrayBuffer())
+            .then(response => {
+                console.log(response);
+            });
+    }
+    getVectorData();
+
     // Compile our shader
     function createProgram(vertexShaderGLSL, fragmentShaderGLSL) {
         const program = gl.createProgram();
@@ -78,7 +107,7 @@ async function init() {
         // Use our shader
         gl.useProgram(program);
         // Render!
-        gl.drawArrays(gl.TRIANGLES, 0, geometry.length / 2);
+        gl.drawArrays(gl.POINTS, 0, geometry.length / 2);
     }
     render();
 }

@@ -1,2 +1,5 @@
+// Get a WebGL context
+const canvas = document.getElementById('canvas');
+const gl = canvas.getContext('webgl');
 
-console.log('Hello, Webglers');
+console.log(gl);

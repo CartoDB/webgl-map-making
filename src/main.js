@@ -28,6 +28,7 @@ async function init() {
         // Get the 0/0/0 MVT
         const tileURL = layergroup.metadata.tilejson.vector.tiles[0].replace('{x}', 0).replace('{y}', 0).replace('{z}', 0);
         let geometry = [];
+        let featureData = [];
         await fetch(tileURL)
             .then(rawData => rawData.arrayBuffer())
             .then(response => {
@@ -40,9 +41,10 @@ async function init() {
                     const point = geom[0][0];
                     // The MVT extent is 4096, and the Y coordinate is inverted respect the WebGL one
                     geometry.push(2 * point.x / 4096 - 1, -2 * point.y / 4096 + 1);
+                    featureData.push(feature.properties.pop_max);
                 }
             });
-        return { geometry };
+        return { geometry, featureData };
     }
 
     // Compile our shader
@@ -73,12 +75,13 @@ async function init() {
     precision highp float;
 
     attribute vec2 vertexPosition;
+    attribute float featureData;
 
     void main(){
         // Z value fixed since we don't care about the visibility problem, see https://en.wikipedia.org/wiki/Z-buffering
         // W value fixed since we don't use 3D perspective, see https://www.tomdalling.com/blog/modern-opengl/explaining-homogenous-coordinates-and-projective-geometry/
         gl_Position = vec4(vertexPosition, 0.5, 1.);
-        gl_PointSize = 2.;
+        gl_PointSize = featureData/1000000.;
     }
     `,
 
@@ -93,10 +96,13 @@ async function init() {
     );
 
     // Upload vector data to WebGL
-    let { geometry } = await getVectorData();
+    let { geometry, featureData } = await getVectorData();
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry), gl.STATIC_DRAW);
+    const dataBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, dataBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(featureData), gl.STATIC_DRAW);
 
     function render() {
         // Set the WebGL Framebuffer resolution to the size of the canvas
@@ -113,6 +119,10 @@ async function init() {
         gl.enableVertexAttribArray(vertexAttribute);
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
         gl.vertexAttribPointer(vertexAttribute, 2, gl.FLOAT, false, 0, 0);
+        const dataAttribute = gl.getAttribLocation(program, 'featureData');
+        gl.enableVertexAttribArray(dataAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, dataBuffer);
+        gl.vertexAttribPointer(dataAttribute, 1, gl.FLOAT, false, 0, 0);
         // Use our shader
         gl.useProgram(program);
         // Render!

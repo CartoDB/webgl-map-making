@@ -1,0 +1,30 @@
+{
+    "name": "webgl-map-making",
+    "version": "0.0.1",
+    "description": "WebGL Map Making tutorial",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "webpack --mode development src/main.js",
+        "build:watch": "webpack --watch --mode development src/main.js",
+        "lint": "eslint src/"
+    },
+    "keywords": [
+        "webgl"
+    ],
+    "author": {
+        "name": "CARTO",
+        "url": "https://carto.com/"
+    },
+    "contributors": [
+        "David Manzanares Miguel <dmanzanares@carto.com>"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "@mapbox/vector-tile": "^1.3.1",
+        "eslint": "^4.19.1",
+        "pbf": "^3.1.0",
+        "webpack": "^4.8.3",
+        "webpack-cli": "^2.1.4"
+    }
+}

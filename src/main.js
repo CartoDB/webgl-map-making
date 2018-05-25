@@ -61,7 +61,12 @@ async function init() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry), gl.STATIC_DRAW);
 
     function render() {
+        // Set the WebGL Framebuffer resolution to the size of the canvas
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+
         // Clear the screen
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 

@@ -77,11 +77,14 @@ async function init() {
     attribute vec2 vertexPosition;
     attribute float featureData;
 
+    varying float featureDataVar;
+
     void main(){
         // Z value fixed since we don't care about the visibility problem, see https://en.wikipedia.org/wiki/Z-buffering
         // W value fixed since we don't use 3D perspective, see https://www.tomdalling.com/blog/modern-opengl/explaining-homogenous-coordinates-and-projective-geometry/
         gl_Position = vec4(vertexPosition, 0.5, 1.);
         gl_PointSize = featureData/1000000.;
+        featureDataVar = featureData;
     }
     `,
 
@@ -89,8 +92,10 @@ async function init() {
     //Fragment Shader
     precision highp float;
 
+    varying float featureDataVar;
+    
     void main(){
-        gl_FragColor = vec4(1.,1.,1.,1.);
+        gl_FragColor = vec4(1.,1., 1.-featureDataVar/50000000., 1.);
     }
     `
     );
